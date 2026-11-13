@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#16a34a">
+  <title>Calculator Doze</title>
+  <style>
+    :root {
+      --bg: #f3f6f4;
+      --card: #ffffff;
+      --text: #0f1a14;
+      --muted: #5b6b62;
+      --border: #e2e8e4;
+      --accent: #16a34a;
+      --accent-soft: #e7f6ec;
+      --accent-text: #0f7a36;
+      --warn-bg: #fff4e5;
+      --warn-border: #f5c27a;
+      --warn-text: #8a4b00;
+      --track: #dfe7e2;
+      --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(15,26,20,.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1210;
+        --card: #161d19;
+        --text: #e8efea;
+        --muted: #93a39a;
+        --border: #26302a;
+        --accent: #22c55e;
+        --accent-soft: #143222;
+        --accent-text: #6ee79b;
+        --warn-bg: #2a1e0c;
+        --warn-border: #6b4a17;
+        --warn-text: #f6c27a;
+        --track: #2a352f;
+        --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+      padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+    }
+    .app { max-width: 480px; margin: 0 auto; display: grid; gap: 14px; }
+
+    header { padding: 4px 4px 2px; }
+    header h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.01em; }
+    header p { margin: 2px 0 0; color: var(--muted); font-size: .9rem; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .label {
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin: 0 0 10px;
+    }
+
+    /* Medication selector */
+    .meds { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .meds input { position: absolute; opacity: 0; pointer-events: none; }
+    .meds label {
+      display: block;
+      text-align: center;
+      padding: 12px 8px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    .meds label:last-of-type:nth-of-type(odd) { grid-column: span 2; }
+    .meds input:checked + label {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent-text);
+    }
+    .meds input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Weight */
+    .weight-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .stepper { display: flex; align-items: center; gap: 8px; }
+    .stepper button {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 1.3rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .stepper button:active { background: var(--accent-soft); }
+    .weight-value { display: flex; align-items: baseline; gap: 4px; }
+    .weight-value input {
+      width: 3.2ch;
+      font: inherit;
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: right;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      padding: 0;
+      -moz-appearance: textfield;
+    }
+    .weight-value input::-webkit-outer-spin-button,
+    .weight-value input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .weight-value input:focus { outline: none; border-bottom: 2px solid var(--accent); }
+    .weight-value span { color: var(--muted); font-weight: 600; }
+
+    input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 8px;
+      border-radius: 99px;
+      background: linear-gradient(to right, var(--accent) var(--fill, 50%), var(--track) var(--fill, 50%));
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #fff; border: 3px solid var(--accent);
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
+      cursor: pointer;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #fff; border: 3px solid var(--accent);
+      cursor: pointer;
+    }
+    .scale { display: flex; justify-content: space-between; color: var(--muted); font-size: .75rem; margin-top: 6px; }
+
+    /* Result */
+    .result { text-align: center; padding: 22px 18px; }
+    .dose { font-size: 3.4rem; font-weight: 800; letter-spacing: -.02em; line-height: 1; color: var(--accent-text); }
+    .unit { font-size: 1.05rem; color: var(--muted); margin-top: 6px; }
+    .unit b { color: var(--text); }
+
+    .formula {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
+      text-align: left;
+      font-size: .9rem;
+    }
+    .formula code {
+      display: block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-top: 6px;
+      font-size: .85rem;
+    }
+    .formula code.active { outline: 1.5px solid var(--accent); }
+
+    .warn {
+      margin-top: 14px;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      color: var(--warn-text);
+      border-radius: 12px;
+      padding: 12px 14px;
+      text-align: left;
+      font-size: .9rem;
+    }
+    .warn ul { margin: 6px 0 0; padding-left: 18px; }
+    .warn li { font-weight: 600; }
+    [hidden] { display: none !important; }
+
+    footer { text-align: center; color: var(--muted); font-size: .75rem; padding: 4px 8px; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>Calculator doze</h1>
+      <p>Alege medicamentul și greutatea copilului</p>
+    </header>
+
+    <section class="card">
+      <p class="label">Medicament</p>
+      <div class="meds" role="radiogroup" aria-label="Medicament">
+        <input type="radio" name="med" id="m-alvotor" value="alvotor" checked><label for="m-alvotor">Alvotor</label>
+        <input type="radio" name="med" id="m-metoclopramid" value="metoclopramid"><label for="m-metoclopramid">Metoclopramid</label>
+        <input type="radio" name="med" id="m-nurofen" value="nurofen"><label for="m-nurofen">Nurofen</label>
+        <input type="radio" name="med" id="m-paracetamol" value="paracetamol"><label for="m-paracetamol">Paracetamol</label>
+        <input type="radio" name="med" id="m-apap" value="apap"><label for="m-apap">APAP</label>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="weight-row">
+        <div>
+          <p class="label" style="margin:0 0 2px">Greutate</p>
+          <div class="weight-value">
+            <input type="number" id="kgInput" min="1" max="50" step="1" value="20" inputmode="numeric" aria-label="Greutate în kg">
+            <span>kg</span>
+          </div>
+        </div>
+        <div class="stepper">
+          <button type="button" id="minus" aria-label="Scade 1 kg">−</button>
+          <button type="button" id="plus" aria-label="Adaugă 1 kg">+</button>
+        </div>
+      </div>
+      <input type="range" id="kgRange" min="1" max="50" step="1" value="20" aria-label="Greutate">
+      <div class="scale"><span>1 kg</span><span>25</span><span>50 kg</span></div>
+    </section>
+
+    <section class="card result" aria-live="polite">
+      <div class="dose" id="dose">–</div>
+      <div class="unit" id="unit"></div>
+
+      <div class="formula">
+        <span class="label">Formula</span>
+        <div id="formula"></div>
+      </div>
+
+      <div class="warn" id="warn" hidden></div>
+    </section>
+
+    <footer>Verifică întotdeauna doza cu prospectul sau medicul.</footer>
+  </main>
+
+  <script>
+    const MIN = 1, MAX = 50;
+
+    // Formulas unchanged from the original Helper.html
+    const MEDS = {
+      alvotor: {
+        name: "Alvotor", unit: "picături",
+        dose: kg => 20 * kg * 10 / 500,
+        formulas: () => [{ text: "20 × kg × 10 / 500", active: true }]
+      },
+      nurofen: {
+        name: "Nurofen", unit: "ml",
+        dose: kg => 50 * kg / 100,
+        formulas: () => [{ text: "50 × kg / 100", active: true }]
+      },
+      metoclopramid: {
+        name: "Metoclopramid", unit: "ml",
+        dose: kg => 0.1 * kg / 5,
+        formulas: () => [{ text: "0.1 × kg × 1 ml / 5", active: true }],
+        warnings: ["NU sub 1 an!", "NU în tratamentul epilepsiei", "Maxim 30 mg doză totală"]
+      },
+      paracetamol: {
+        name: "Paracetamol", unit: "ml",
+        dose: kg => (kg <= 4 ? 10 : 15) * 5 * kg / 120,
+        formulas: kg => [
+          { text: "10 × 5 × kg / 120   (≤ 4 kg)", active: kg <= 4 },
+          { text: "15 × 5 × kg / 120   (> 4 kg)", active: kg > 4 }
+        ]
+      },
+      apap: {
+        name: "APAP", unit: "ml",
+        dose: kg => (kg <= 4 ? 10 : 15) * 1 * kg / 40,
+        formulas: kg => [
+          { text: "10 × 1 × kg / 40   (≤ 4 kg)", active: kg <= 4 },
+          { text: "15 × 1 × kg / 40   (> 4 kg)", active: kg > 4 }
+        ]
+      }
+    };
+
+    const $ = id => document.getElementById(id);
+    const range = $("kgRange"), input = $("kgInput");
+
+    const currentMed = () => document.querySelector('input[name="med"]:checked').value;
+
+    function setWeight(v) {
+      let kg = Math.round(Number(v));
+      if (!Number.isFinite(kg)) return;
+      kg = Math.min(MAX, Math.max(MIN, kg));
+      range.value = kg;
+      if (document.activeElement !== input || input.value !== "") input.value = kg;
+      render();
+    }
+
+    function render() {
+      const kg = Number(range.value);
+      const med = MEDS[currentMed()];
+
+      range.style.setProperty("--fill", ((kg - MIN) / (MAX - MIN) * 100) + "%");
+
+      $("dose").textContent = med.dose(kg).toFixed(1);
+      $("unit").innerHTML = `${med.unit} <b>${med.name}</b> · ${kg} kg`;
+      $("formula").innerHTML = med.formulas(kg)
+        .map(f => `<code class="${f.active ? "active" : ""}">${f.text}</code>`).join("");
+
+      const warn = $("warn");
+      if (med.warnings) {
+        warn.innerHTML = "⚠️ Atenție:<ul>" + med.warnings.map(w => `<li>${w}</li>`).join("") + "</ul>";
+        warn.hidden = false;
+      } else {
+        warn.hidden = true;
+      }
+    }
+
+    range.addEventListener("input", () => setWeight(range.value));
+    input.addEventListener("input", () => { if (input.value !== "") setWeight(input.value); });
+    input.addEventListener("blur", () => { input.value = range.value; });
+    $("minus").addEventListener("click", () => setWeight(Number(range.value) - 1));
+    $("plus").addEventListener("click", () => setWeight(Number(range.value) + 1));
+    document.querySelectorAll('input[name="med"]').forEach(r => r.addEventListener("change", render));
+
+    render();
+  </script>
+</body>
+</html>
