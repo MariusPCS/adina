@@ -284,8 +284,8 @@
         <input type="radio" name="med" id="m-metoclopramid" value="metoclopramid"><label for="m-metoclopramid"><span class="flag" aria-label="are avertismente">⚠️</span>Metoclopramid<small>ml</small></label>
         <input type="radio" name="med" id="m-nurofen" value="nurofen"><label for="m-nurofen">Nurofen<small>ml</small></label>
         <input type="radio" name="med" id="m-paracetamol" value="paracetamol"><label for="m-paracetamol">Paracetamol<small>ml</small></label>
-        <input type="radio" name="med" id="m-xifa" value="xifa"><label for="m-xifa">Xifa<small>ml · 100 mg/5 ml</small></label>
-        <input type="radio" name="med" id="m-zimmat" value="zimmat"><label for="m-zimmat">Zimmat<small>ml · 125 mg/5 ml</small></label>
+        <input type="radio" name="med" id="m-xifia" value="xifia"><label for="m-xifia">Xifia<small>ml · 100 mg/5 ml</small></label>
+        <input type="radio" name="med" id="m-zinnat" value="zinnat"><label for="m-zinnat">Zinnat<small>ml · 125 mg/5 ml</small></label>
       </div>
     </section>
 
@@ -387,13 +387,13 @@
         dose: (kg, b) => kg * MEDS.augmentin.conditions[b].mgkg * 5 / 600,
         formulas: (kg, b) => [{ text: `kg × ${MEDS.augmentin.conditions[b].mgkg} × 5 / 600`, active: true }]
       },
-      xifa: {
-        name: "Xifa", unit: "ml",
+      xifia: {
+        name: "Xifia", unit: "ml",
         dose: kg => kg * 8 * 5 / 100,
         formulas: () => [{ text: "kg × 8 × 5 / 100", active: true }]
       },
-      zimmat: {
-        name: "Zimmat", unit: "ml",
+      zinnat: {
+        name: "Zinnat", unit: "ml",
         dose: kg => kg * 20 * 5 / 125,
         formulas: () => [{ text: "kg × 20 × 5 / 125", active: true }]
       }
